@@ -50,7 +50,21 @@ class SlidingWindowCounter:
         window_size: Union[int, dt.timedelta],
         bucket_size: Union[int, dt.timedelta],
         start_immediately: bool = False,
+        cleanup_frequency: Union[int, None] = None,
     ) -> None:
+        """Inititalise new SlidingWindowCounter
+
+        `window_size` is the length of time we want to track in seconds.
+        `bucket_size` is the resolution of our underlying counters in seconds.
+        A higher bucket_size will allow for finer grained counting but will require
+        more memory to store.
+        `start_immediately` will set `self.start_time` during `__init__` if `True`,
+        otherwise `self.start_time` will be set during first call to `self.increment`.
+        `cleanup_frequency` is the time in seconds to check if we need to do internal
+        cleanups. This can be tuned to do cleanups less often at the expense of
+        potentially increased memory usage.
+        If `None` then will use `bucket_size` as the cleanup frequency.
+        """
         if isinstance(window_size, dt.timedelta):
             window_size = int(window_size.total_seconds())
         if window_size < 1:
@@ -70,6 +84,13 @@ class SlidingWindowCounter:
         self._bucket_size = bucket_size
 
         self._last_cleanup = now()
+
+        if cleanup_frequency is None:
+            cleanup_frequency = bucket_size
+        if cleanup_frequency < 1:
+            raise ValueError("cleanup_frequency must be >= 1")
+        self._cleanup_frequency = cleanup_frequency
+
         self._lock = threading.RLock()
 
         self._grand_total = 0
@@ -155,7 +176,7 @@ class SlidingWindowCounter:
     ## -------------------------------------------------------------------------
     def _should_cleanup(self) -> bool:
         """Determine if we should run a cleanup task"""
-        return now() - self._last_cleanup > self._bucket_size
+        return now() - self._last_cleanup > self._cleanup_frequency
 
     def _run_cleanup(self) -> None:
         """Cleanup old buckets"""
