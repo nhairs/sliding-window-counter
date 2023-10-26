@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sliding-window-counter"
+version = "0.0.0"
+description = "Counter with a time based sliding window"
+authors  = [
+    {name = "Nicholas Hairs", email = "info@nicholashairs.com"},
+]
+
+# Dependency Information
+requires-python = ">=3.8"
+dependencies = []
+
+# Extra information
+readme = "README.md"
+license = {file = "LICENCE"}
+classifiers = [
+    "Programming Language :: Python :: 3 :: Only",  # This template is 3.7+
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Development Status :: 3 - Alpha",  # Default to Alpha.
+]
+
+[project.optional-dependencies]
+dev = [
+    ### dev.sh dependencies
+    ## Formatting / Linting
+    "validate-pyproject[all]",
+    "black",
+    "pylint",
+    "mypy",
+    ## Testing
+    "pytest",
+    ## Docs
+    "mkdocs",
+    "mkdocs-material>=8.5",
+    "mkdocs-awesome-pages-plugin",
+    "mdx_truly_sane_lists",
+    ## REPL
+    "bpython",
+]
+
+test = [
+    "freezegun",  # control time for tests
+]
+
+[tool.setuptools.package-data]
+sliding_window_counter = ["py.typed"]
