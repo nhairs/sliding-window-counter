@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sliding-window-counter"
-version = "0.0.1.dev1"
+version = "0.0.1"
 description = "Counter with a time based sliding window"
 authors  = [
     {name = "Nicholas Hairs", email = "info@nicholashairs.com"},
