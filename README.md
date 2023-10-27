@@ -41,13 +41,13 @@ mini_counter = SlidingWindowCounter(10, 1)
 for i in range(20):
     add = random.randint(1,20)
     mini_counter.increment(add)
-    print(f"{i:>3}s Added: {add:<3} Window: {mini_counter.current_count:<6} Total: {mini_counter.grand_total:<6} Avg: {mini_counter.current_count/mini_counter.window_size:>5.2f}/s")
+    print(f"{i:>3}s Added: {add:<3} Window: {mini_counter.current_total:<6} Total: {mini_counter.grand_total:<6} Avg: {mini_counter.current_throughput:>5.2f}/s")
     time.sleep(1)
 
 # Watch it drain
 for i in range(12):
     time.sleep(1)
-    print(f"Window: {mini_counter.current_count:<5} Total: {mini_counter.grand_total:<5} Avg: {mini_counter.current_count/mini_counter.window_size:>5.2f}/s")
+    print(f"Window: {mini_counter.current_total:<5} Total: {mini_counter.grand_total:<5} Avg: {mini_counter.current_throughput:>5.2f}/s")
 ```
 
 ## Bugs, Feature Requests etc

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sliding-window-counter"
-version = "0.0.0"
+version = "0.0.1.dev1"
 description = "Counter with a time based sliding window"
 authors  = [
     {name = "Nicholas Hairs", email = "info@nicholashairs.com"},
@@ -18,13 +18,16 @@ dependencies = []
 readme = "README.md"
 license = {file = "LICENCE"}
 classifiers = [
-    "Programming Language :: Python :: 3 :: Only",  # This template is 3.7+
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Development Status :: 3 - Alpha",  # Default to Alpha.
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Typing :: Typed",
+    "License :: OSI Approved :: MIT License",
 ]
 
 [project.optional-dependencies]

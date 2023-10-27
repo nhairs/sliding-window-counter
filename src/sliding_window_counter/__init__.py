@@ -41,6 +41,9 @@ class _Bucket:
     bucket: int
     count: int = 0
 
+    def __repr__(self) -> str:
+        return f"({self.bucket}: {self.count})"
+
 
 class SlidingWindowCounter:
     """Time based sliding window counter"""
@@ -62,8 +65,8 @@ class SlidingWindowCounter:
         otherwise `self.start_time` will be set during first call to `self.increment`.
         `cleanup_frequency` is the time in seconds to check if we need to do internal
         cleanups. This can be tuned to do cleanups less often at the expense of
-        potentially increased memory usage.
-        If `None` then will use `bucket_size` as the cleanup frequency.
+        potentially increased memory usage. If `None` then will use `window_size // 5`
+        with a minimum value of `1`.
         """
         if isinstance(window_size, dt.timedelta):
             window_size = int(window_size.total_seconds())
@@ -86,7 +89,7 @@ class SlidingWindowCounter:
         self._last_cleanup = now()
 
         if cleanup_frequency is None:
-            cleanup_frequency = bucket_size
+            cleanup_frequency = max(1, window_size // 5)
         if cleanup_frequency < 1:
             raise ValueError("cleanup_frequency must be >= 1")
         self._cleanup_frequency = cleanup_frequency
@@ -94,11 +97,10 @@ class SlidingWindowCounter:
         self._lock = threading.RLock()
 
         self._grand_total = 0
+        self._start_time = 0
 
         if start_immediately:
-            self._start_time = now()
-        else:
-            self._start_time = 0
+            self.start()
 
         self._buckets: Deque[_Bucket] = deque()
         return
@@ -109,8 +111,8 @@ class SlidingWindowCounter:
             raise ValueError("amount must be >= 1")
 
         with self._lock:
-            if self._start_time == 0:
-                self._start_time = now()
+            if not self.started:
+                self.start()
 
             # Increment grand total
             self._grand_total += amount
@@ -128,6 +130,17 @@ class SlidingWindowCounter:
 
         self._run_cleanup_if_needed()
         return
+
+    def start(self) -> bool:
+        """Manually start counter.
+
+        Return `True` if the counter was not started. Otherwise does nothing and returns `False`.
+        """
+        with self._lock:
+            if not self.started:
+                self._start_time = now()
+                return True
+        return False
 
     def _get_current_bucket(self) -> int:
         # Ref: https://stackoverflow.com/a/65725123/12281814
@@ -152,9 +165,11 @@ class SlidingWindowCounter:
         return self._start_time
 
     @property
-    def run_time(self) -> int:
+    def running_time(self) -> int:
         """Seconds since this SlidingWindowCounter started"""
         self._run_cleanup_if_needed()
+        if not self.started:
+            return 0
         return now() - self.start_time
 
     @property
@@ -164,7 +179,7 @@ class SlidingWindowCounter:
         return self._grand_total
 
     @property
-    def current_count(self) -> int:
+    def current_total(self) -> int:
         """Get the total for the current window"""
         with self._lock:
             # Do cleanup so we know that the deque only has valid buckets
@@ -172,10 +187,41 @@ class SlidingWindowCounter:
             total = sum(bucket.count for bucket in self._buckets)
         return total
 
+    @property
+    def current_throughput(self) -> float:
+        """The current throughput of the counter.
+
+        If the counter has been running for less than `window_length` seconds,
+        will instead calculate based on `running_time` giving more accurate values
+        during the startup period.
+
+        If the counter is not started will return `0.0`.
+        If `running_time` is `0` (e.g. because started and checked within a second) will
+        return the current total as if it was across the whole second.
+        """
+        self._run_cleanup_if_needed()
+        if not self.started:
+            return 0.0
+
+        running_time = self.running_time
+        if running_time == 0:
+            return self.current_total
+        if running_time < self.window_size:
+            # We've not been running very long, use running_time
+            return self.current_total / running_time
+        return self.current_total / self.window_size
+
+    @property
+    def started(self) -> bool:
+        """Is counter started"""
+        return self._start_time != 0
+
     ## Cleanup
     ## -------------------------------------------------------------------------
     def _should_cleanup(self) -> bool:
         """Determine if we should run a cleanup task"""
+        if not self.started:
+            return False
         return now() - self._last_cleanup > self._cleanup_frequency
 
     def _run_cleanup(self) -> None:
