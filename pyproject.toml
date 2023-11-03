@@ -16,7 +16,7 @@ dependencies = []
 
 # Extra information
 readme = "README.md"
-license = {file = "LICENCE"}
+license = {text = "MIT"}
 classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.8",
@@ -29,6 +29,9 @@ classifiers = [
     "Typing :: Typed",
     "License :: OSI Approved :: MIT License",
 ]
+
+[project.urls]
+homepage = "https://github.com/nhairs/sliding-window-counter"
 
 [project.optional-dependencies]
 dev = [
